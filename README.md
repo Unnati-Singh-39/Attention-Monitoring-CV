@@ -1,168 +1,211 @@
-# AI-Based Real-Time Attention Monitoring System
-live @ https://attention-monitor.onrender.com
+# Attention-Monitoring-CV
+## Author
+
+**Unnati Singh**
+**Registration Number:** 24BAI10625
 
 ## Abstract
 
-This project presents a real-time, web-based attention monitoring system that evaluates user engagement using computer vision. By integrating posture analysis and facial behavior tracking, the system estimates cognitive states such as focus, distraction, and drowsiness. The solution operates without any training dataset, relying on rule-based inference over pose and facial landmarks.
+This project presents a real-time, web-based attention monitoring system that uses computer vision to analyze facial behavior and body posture through a standard webcam. The system detects visual indicators such as eye closure, head direction, posture changes, yawning, and absence of a detected face. These observations are combined using a rule-based scoring mechanism to estimate the user's attention level and provide feedback.
+
+The system does not require a training dataset. Instead, it uses facial and pose landmarks extracted using MediaPipe and processes them using OpenCV and Python.
 
 ## Problem Statement
 
-Maintaining attention during prolonged screen interaction is a critical challenge in educational and professional environments. Existing solutions often require intrusive hardware or large datasets. This project aims to develop a lightweight, real-time system that can monitor attention using only a standard webcam.
+Maintaining attention during prolonged screen interaction can be challenging in educational and professional environments. This project aims to develop a lightweight system that can monitor visible indicators of attention using only a standard webcam, without requiring specialized hardware or a large training dataset.
 
 ## Objectives
 
-* To detect and analyze human posture in real time
-* To identify facial behavioral cues such as eye closure and head direction
-* To compute an attention score based on multiple parameters
-* To classify user attention states using a rule-based scoring system
-* To present results through an interactive web interface
+- To detect human posture in real time
+- To analyze facial behavioral cues using facial landmarks
+- To detect eye closure and head direction
+- To identify posture-related issues such as head-forward position and leaning
+- To calculate an attention score from detected conditions
+- To classify attention into different states
+- To provide real-time feedback through a web dashboard
 
 ## System Architecture
 
-Webcam → Frame Capture (OpenCV) → Landmark Detection (MediaPipe Pose + Face Mesh) → Feature Extraction → Rule-Based Analysis → Flask Server → Web Dashboard
+Webcam → Frame Capture using OpenCV → MediaPipe Pose + Face Mesh → Landmark Extraction → Feature Analysis → Rule-Based Scoring → Attention State & Feedback → Flask Web Dashboard
 
 ## Methodology
 
-### 1. Landmark Detection
+### 1. Frame Capture
 
-The system uses MediaPipe Pose and Face Mesh models to extract key body and facial landmarks from each video frame.
+The system receives frames from the user's webcam. OpenCV is used for image acquisition and processing.
 
-### 2. Feature Extraction
+### 2. Landmark Detection
 
-Relevant spatial relationships are computed, including:
+MediaPipe Pose and Face Mesh are used to identify relevant body and facial landmarks.
 
-* Head position relative to shoulders
-* Eye openness
-* Mouth movement
-* Head orientation
+The system uses these landmarks to analyze:
 
-### 3. Attention Scoring
+- Nose and shoulder positions
+- Eye openness
+- Mouth opening
+- Facial direction
+- Shoulder alignment
 
-A rule-based scoring system assigns penalties based on detected issues such as slouching, drowsiness, or distraction.
+### 3. Feature Analysis
 
-### 4. State Classification
+The extracted landmarks are used to identify visible attention-related conditions such as:
 
-Based on the computed score, the system classifies the user into one of the following states:
+- Eyes closed
+- Looking away
+- Head-forward position
+- Slouching
+- Leaning
+- Yawning
+- Face not detected
 
-* **Focused**
-* **Attentive**
-* **Low Attention**
-* **Distracted**
-* **Critical**
+Both eyes are considered when evaluating eye closure.
+
+### 4. Attention Scoring
+
+The system starts with an attention score of 100. Penalties are applied when specific conditions are detected.
+
+The final score is constrained to the range:
+
+**0–100**
+
+### 5. Attention State Classification
+
+The final score is mapped to an attention state:
+
+- **Focused**
+- **Attentive**
+- **Low Attention**
+- **Distracted**
+- **Critical**
+
+### 6. Feedback Generation
+
+Based on the calculated score, the system generates feedback such as maintaining focus, refocusing attention, or addressing detected distraction.
 
 ## Features
 
-* Real-time video processing
-* Multi-modal analysis (posture + facial behavior)
-* Attention score (0–100)
-* Issue-specific feedback
-* Dynamic cognitive state classification
-* Web-based dashboard using Flask
-* No dataset or training required
+- Real-time webcam-based monitoring
+- Facial landmark analysis
+- Pose and posture analysis
+- Two-eye closure detection
+- Looking-away detection
+- Head-forward detection
+- Slouching and leaning detection
+- Face-not-detected handling
+- Attention score from 0–100
+- Attention state classification
+- Personalized feedback
+- Web-based dashboard
+- No training dataset required
 
 ## Technologies Used
 
-* Python
-* OpenCV
-* MediaPipe
-* Flask
-* HTML, CSS, JavaScript
+- Python
+- OpenCV
+- MediaPipe
+- Flask
+- NumPy
+- HTML
+- CSS
+- JavaScript
 
 ## How to Run
 
-1. Clone the repository
-   git clone https://github.com/pratyaksha0612/AI-attention-monitoring-system.git
+### 1. Clone the repository
 
-2. Navigate to project folder
-   cd AI-attention-monitoring-system
+    git clone https://github.com/Unnati-Singh-39/Attention-Monitoring-CV.git
+### 2. Navigate to the project directory
 
-3. Install dependencies
-   pip install -r requirements.txt
+    cd Attention-Monitoring-CV
 
-4. Run the application
-   python app.py
+### 3. Create and activate a virtual environment
 
-5. Open in browser
-   http://127.0.0.1:5000/
+    python3.10 -m venv venv
+    source venv/bin/activate
+
+### 4. Install dependencies
+
+    pip install -r requirements.txt
+
+### 5. Run the application
+
+    python app.py
+
+### 6. Open the application
+
+Open the following address in your browser:
+
+    http://127.0.0.1:5001
+
+Allow webcam access when prompted.
 
 ## Project Structure
 
-```
-Attention System/
-│
-├── app.py
-├── src/
-│   └── detector.py
-├── templates/
-│   └── index.html
-├── static/
-│   └── style.css
-├── outputs/
-│   ├── 01_focused.png
-│   ├── 02_attentive_eyes_closed.png
-│   ├── 03_attentive_head_forward.png
-│   ├── 04_distracted.png
-│   └── 05_dashboard_stats.png
-├── requirements.txt
-└── README.md
-```
-
-## Applications
-
-* Online learning attention tracking
-* Workplace productivity monitoring
-* Human-computer interaction systems
-
-## Key Contributions
-
-* Combines posture and facial behavior for attention analysis
-* Implements a rule-based cognitive scoring system
-* Eliminates need for training datasets
-* Provides real-time web-based visualization
+    AI-attention-monitoring-system/
+    │
+    ├── app.py
+    ├── src/
+    │   └── detector.py
+    ├── templates/
+    │   └── index.html
+    ├── static/
+    │   └── style.css
+    ├── outputs/
+    │   ├── focused.jpeg
+    │   ├── eyes_closed.jpeg
+    │   ├── head_forward.jpeg
+    │   ├── looking_away.jpeg
+    │   └── graph.jpeg
+    ├── requirements.txt
+    ├── .gitignore
+    └── README.md
 
 ## Output Demonstration
 
 ### Focused State
 
-![Focused](./outputs/01_focused.png)
+![Focused](./outputs/focused.jpeg)
 
-### Attentive State (Eyes Closed)
+### Eyes Closed
 
-![Attentive Eyes Closed](./outputs/02_attentive_eyes_closed.png)
+![Eyes Closed](./outputs/eyes_closed.jpeg)
 
-### Attentive State (Head Forward)
+### Head Forward
 
-![Attentive Head Forward](./outputs/03_attentive_head_forward.png)
+![Head Forward](./outputs/head_forward.jpeg)
 
-### Distracted State
+### Looking Away
 
-![Distracted](./outputs/04_distracted.png)
+![Looking Away](./outputs/looking_away.jpeg)
 
-### Dashboard Statistics
+### Dashboard Graph
 
-![Dashboard Analytics](./outputs/05_dashboard_stats.png)
+![Dashboard Graph](./outputs/graph.jpeg)
 
 ## Results
 
-The system successfully performs real-time attention monitoring and provides interpretable feedback through a scoring mechanism and issue identification. It demonstrates the feasibility of lightweight computer vision solutions for behavioral analysis without reliance on large datasets.
+The implemented system successfully processes webcam frames in real time and provides an attention score, attention state, and issue-specific feedback based on detected visual conditions.
+
+Testing was performed using different facial and posture conditions, including focused attention, eye closure, head-forward position, and looking away.
 
 ## Limitations
 
-* Rule-based system may not generalize to all environments
-* Performance depends on lighting and camera quality
-* Does not perform true emotion classification
+- The system uses rule-based thresholds rather than a trained machine-learning model.
+- Detection performance can be affected by lighting and camera quality.
+- Facial landmark detection may become less reliable when the face is partially occluded.
+- Attention is estimated from visible behavioral cues and does not represent a direct measurement of a person's cognitive state.
 
 ## Future Scope
 
-* Integration with deep learning-based emotion recognition
-* Audio alert system for prolonged inattention
-* Deployment as a web or mobile application
-* Historical analytics and attention tracking
+- Adaptive thresholds based on individual users
+- Historical attention analytics
+- Improved head-pose estimation
+- Deep-learning-based behavioral classification
+- Audio alerts for prolonged distraction
+- Improved robustness under different lighting conditions
 
 ## Conclusion
 
-This project demonstrates an effective approach to real-time attention monitoring using computer vision. By combining posture and facial analysis, it provides a scalable and practical solution for enhancing engagement in digital environments.
+This project demonstrates a lightweight computer-vision approach for real-time attention monitoring using webcam input. By combining facial and pose landmark analysis with rule-based scoring, the system provides interpretable attention states and feedback without requiring a training dataset.
 
-## Author
 
-Pratyaksha Singh
