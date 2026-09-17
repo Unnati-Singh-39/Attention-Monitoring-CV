@@ -1,0 +1,156 @@
+import cv2
+import mediapipe as mp
+import threading
+
+mp_pose = mp.solutions.pose
+mp_face = mp.solutions.face_mesh
+
+pose = None
+face_mesh = None
+
+# MediaPipe instances are not thread-safe and will SIGSEGV if accessed concurrently.
+_detector_lock = threading.Lock()
+
+def get_distance(p1, p2, w, h):
+    return ((p1.x * w - p2.x * w) ** 2 + (p1.y * h - p2.y * h) ** 2) ** 0.5
+
+def analyze_frame(frame):
+    global pose, face_mesh
+    
+    with _detector_lock:
+        if pose is None:
+            pose = mp_pose.Pose()
+        if face_mesh is None:
+            face_mesh = mp_face.FaceMesh(refine_landmarks=True)
+
+    h, w, _ = frame.shape
+    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+    with _detector_lock:
+        pose_result = pose.process(rgb)
+        face_result = face_mesh.process(rgb)
+
+    score = 100
+    issues = []
+
+    # POSTURE
+    if pose_result.pose_landmarks:
+        lm = pose_result.pose_landmarks.landmark
+
+        nose = lm[mp_pose.PoseLandmark.NOSE]
+        l_sh = lm[mp_pose.PoseLandmark.LEFT_SHOULDER]
+        r_sh = lm[mp_pose.PoseLandmark.RIGHT_SHOULDER]
+
+        nose_x, nose_y = int(nose.x * w), int(nose.y * h)
+        l_sh_x, l_sh_y = int(l_sh.x * w), int(l_sh.y * h)
+        r_sh_x, r_sh_y = int(r_sh.x * w), int(r_sh.y * h)
+
+        center_x = (l_sh_x + r_sh_x) // 2
+        center_y = (l_sh_y + r_sh_y) // 2
+
+        if abs(nose_x - center_x) > 50:
+            issues.append("Head Forward")
+            score -= 20
+
+        if (center_y - nose_y) < 60:
+            issues.append("Slouching")
+            score -= 20
+
+        if abs(l_sh_y - r_sh_y) > 40:
+            issues.append("Leaning")
+            score -= 15
+
+    # FACE
+    if face_result.multi_face_landmarks:
+        for face in face_result.multi_face_landmarks:
+            lm = face.landmark
+
+            # Check both eyes for better eye-closure detection
+            left_eye_top = lm[159]
+            left_eye_bottom = lm[145]
+            right_eye_top = lm[386]
+            right_eye_bottom = lm[374]
+
+            left_eye_dist = get_distance(
+                left_eye_top, left_eye_bottom, w, h
+            )
+            right_eye_dist = get_distance(
+                right_eye_top, right_eye_bottom, w, h
+            )
+
+            avg_eye_dist = (left_eye_dist + right_eye_dist) / 2
+
+            upper_lip = lm[13]
+            lower_lip = lm[14]
+            mouth_dist = get_distance(
+                upper_lip, lower_lip, w, h
+            )
+
+            nose = lm[1]
+
+            # Eye closure based on both eyes
+            if avg_eye_dist < 5:
+                issues.append("Eyes Closed")
+                score -= 30
+
+            # Yawning detection
+            if mouth_dist > 20:
+                issues.append("Yawning")
+                score -= 15
+
+            # Looking-away detection
+            if nose.x < 0.3 or nose.x > 0.7:
+                issues.append("Looking Away")
+                score -= 20
+
+    else:
+        issues.append("Face Not Detected")
+        score -= 25
+
+    # Keep score within valid range
+
+    score = max(0, min(100, score))
+
+    # Determine attention state
+
+    if score > 80:
+
+        state = "FOCUSED"
+
+    elif score > 60:
+
+        state = "ATTENTIVE"
+
+    elif score > 40:
+
+        state = "LOW ATTENTION"
+
+    elif score > 20:
+
+        state = "DISTRACTED"
+
+    else:
+
+        state = "CRITICAL"
+
+    # Generate personalized feedback
+
+    if score > 80:
+
+        message = "Great focus! Keep it up."
+
+    elif score > 60:
+
+        message = "You're attentive. Try to maintain your focus."
+
+    elif score > 40:
+
+        message = "Attention is dropping. Try to refocus."
+
+    else:
+
+        message = "High distraction detected. Please refocus."
+
+    issues.append(message)
+
+    return frame, score, state, issues
